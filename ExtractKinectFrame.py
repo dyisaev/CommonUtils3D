@@ -1,24 +1,31 @@
 from pyk4a import PyK4APlayback
 import cv2
 import argparse
-from pyk4a_helpers import convert_to_bgra_if_required
-from moviepy.editor import VideoFileClip
-
+from pyk4a_helpers import convert_to_bgra_if_required,colorize
 
 def info(playback: PyK4APlayback):
     #    number of captures
     total_captures = playback.length
-    print(f"Total frames: {total_captures}\n")
+    print(f"Total recording time in usec: {total_captures}\n")
     return total_captures
 
 kinect_get_fps = lambda total_captures,total_duration_seconds: total_captures / total_duration_seconds
 
-def extract_kinect_frame(playback,offset_in_sec,frame_rate):
-    playback.seek(int(offset_in_sec * frame_rate))
+def extract_kinect_frame(playback,offset_in_sec):
+    playback.seek(int(offset_in_sec * 10**6))
     capture = playback.get_next_capture()
-    color_image = convert_to_bgra_if_required(playback.configuration['color_format'],capture.color)
-    depth_image = capture.depth
+    if capture.color is not None:
+        color_image = convert_to_bgra_if_required(playback.configuration["color_format"], capture.color)
+    else:
+        print(f'Color image is not available at {offset_in_sec} seconds')
+        color_image = None
+    if capture.depth is not None:
+        depth_image = colorize(capture.depth, (None, 5000))
+    else:
+        print(f'Depth image is not available at {offset_in_sec} seconds')
+        depth_image = None
     return color_image, depth_image
+
 def save_color_image(color_image, filename):
     cv2.imwrite(filename, color_image)
 def save_depth_image(depth_image, filename):
@@ -32,35 +39,22 @@ def save_depth_image(depth_image, filename):
 # Note: The color image is saved as a 24-bit PNG file.
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--frame_num', type=int, default=100)
+parser.add_argument('--sec', type=float, required = True)
 parser.add_argument('--kinect_file', type=str, required=True)
 parser.add_argument('--color_file', type=str, required=True)
 parser.add_argument('--depth_file', type=str, required=True)
 
 #args = parser.parse_args()
-#if __name__ == '__main__':
+if __name__ == '__main__':
 
-#    --frame_num 1800 --kinect_file /diskA/Temp_videos/dmitry/dmitry_test_1/1685459232_000704314112.mkv --color_file /diskB/data/tmp/color1800.png --depth_file /diskB/data/depth1800.png
-offset_in_sec = 30
-kinect_file = '/diskA/Temp_videos/dmitry/dmitry_test_1/1685459232_000704314112.mkv'
-color_file = '/diskB/data/tmp/color1800.png'
-depth_file = '/diskB/data/tmp/depth1800.png'
+    args=parser.parse_args()
+    playback = PyK4APlayback(args.kinect_file)
+    playback.open()
+    total_captures=info(playback)
+    color_image, depth_image = extract_kinect_frame(playback,args.sec)
+    playback.close()
 
-
-
-clip = VideoFileClip(kinect_file)
-duration_seconds = clip.duration
-
-playback = PyK4APlayback(kinect_file)
-playback.open()
-total_captures=info(playback)
-frame_rate = kinect_get_fps(total_captures,duration_seconds)
-print(f'Duration_seconds: {duration_seconds}\nFrame rate: {frame_rate}')
-
-color_image, depth_image = extract_kinect_frame(playback,offset_in_sec,frame_rate)
-playback.close()
-
-save_color_image(color_image, color_file)
-save_depth_image(depth_image, depth_file)
+    save_color_image(color_image, args.color_file)
+    save_depth_image(depth_image, args.depth_file)
 
 
