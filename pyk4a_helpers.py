@@ -7,7 +7,7 @@ from typing import Optional, Tuple
 import cv2
 import numpy as np
 
-from pyk4a import ImageFormat
+from pyk4a import ImageFormat,PyK4APlayback
 
 
 def convert_to_bgra_if_required(color_format: ImageFormat, color_image):
@@ -39,3 +39,9 @@ def colorize(
     img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     img = cv2.applyColorMap(img, colormap)
     return img
+
+def info(playback: PyK4APlayback):
+    #    number of captures
+    total_captures = playback.length
+    print(f"Total recording time in usec: {total_captures}\n")
+    return total_captures

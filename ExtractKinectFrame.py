@@ -1,13 +1,9 @@
 from pyk4a import PyK4APlayback
 import cv2
 import argparse
-from pyk4a_helpers import convert_to_bgra_if_required,colorize
+from pyk4a_helpers import convert_to_bgra_if_required,colorize,info
 
-def info(playback: PyK4APlayback):
-    #    number of captures
-    total_captures = playback.length
-    print(f"Total recording time in usec: {total_captures}\n")
-    return total_captures
+
 
 kinect_get_fps = lambda total_captures,total_duration_seconds: total_captures / total_duration_seconds
 
@@ -31,12 +27,6 @@ def save_color_image(color_image, filename):
 def save_depth_image(depth_image, filename):
     cv2.imwrite(filename, depth_image)
 
-#Usage:
-# color_image, depth_image = extract_kinect_frame(100, 'kinect.mkv')
-# save_color_image(color_image, 'color.png')
-# save_depth_image(depth_image, 'depth.png')
-# Note: The depth image is saved as a 16-bit PNG file.
-# Note: The color image is saved as a 24-bit PNG file.
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--sec', type=float, required = True)
