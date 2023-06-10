@@ -45,3 +45,9 @@ def info(playback: PyK4APlayback):
     total_captures = playback.length
     print(f"Total recording time in usec: {total_captures}\n")
     return total_captures
+
+def save_transformation_to_txt(transformation, filename):
+    np.savetxt(filename, transformation, delimiter=' ', fmt='%f')
+
+def load_transformation_from_txt(filename):
+    return np.loadtxt(filename, delimiter=' ', dtype=np.float32)
