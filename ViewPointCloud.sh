@@ -1,5 +1,8 @@
 #!/usr/bin/bash
 
+# get to the directory where this script is located
+cd "$(dirname "$0")"
+
 echo "DISPLAY variable should be set if working remotely"
 echo "If not set, run the following command:"
 echo "export DISPLAY=:<..>"
@@ -12,8 +15,10 @@ if [[ $# -lt 1 ]]; then
     exit 1
 fi
 
-if [[ $2 -ne "" ]]; then
+if [ -n $2 ]; then
     VOXEL_SIZE="--voxel_size $2"
 fi
 
-python3 ./ViewPointCloud.py --ply_file $1 $VOXEL_SIZE
+echo "python3 ./ViewPointCloud.py --ply_file $1 $VOXEL_SIZE"
+eval "python3 ./ViewPointCloud.py --ply_file $1 $VOXEL_SIZE"
+
