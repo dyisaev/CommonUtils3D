@@ -1,7 +1,12 @@
 import open3d as o3d
 import argparse
-def convert_mesh_to_pointcloud(mesh, number_of_points):
-    point_cloud = mesh.sample_points_uniformly(number_of_points=number_of_points)
+def convert_mesh_to_pointcloud(mesh, number_of_points, compute_normals=True, sample_type='uniform', init_factor=5):
+    if compute_normals:
+        mesh.compute_vertex_normals()
+    if sample_type == 'uniform':
+        point_cloud = mesh.sample_points_uniformly(number_of_points=number_of_points)
+    elif sample_type == 'poisson':
+        point_cloud = mesh.sample_points_poisson_disk(number_of_points=number_of_points,init_factor=init_factor)
     return point_cloud
 
 parser = argparse.ArgumentParser()

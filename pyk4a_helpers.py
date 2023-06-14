@@ -6,6 +6,8 @@ from typing import Optional, Tuple
 
 import cv2
 import numpy as np
+import open3d as o3d
+import os
 
 from pyk4a import ImageFormat,PyK4APlayback
 
@@ -51,3 +53,42 @@ def save_transformation_to_txt(transformation, filename):
 
 def load_transformation_from_txt(filename):
     return np.loadtxt(filename, delimiter=' ', dtype=np.float32)
+
+def read_obj(file_path):
+    # Lists to store vertices and faces
+    vertices = []
+    faces = []
+    normals = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            components = line.strip(' \n').split()
+            if len(components) == 0 or components[0] == '#':
+                continue
+            if components[0] == 'v':  # vertex information
+                vertices.append([float(components[1]), float(components[2]), float(components[3])])
+            elif components[0] == 'vn':  # vertex normal information
+                normals.append([float(components[1]), float(components[2]), float(components[3])])
+            elif components[0] == 'f':  # face information
+                face_components = components[1:]  # remove 'f'
+                # split each component into its parts and get the vertex index
+                face = [int(comp.split('/')[0])-1 for comp in face_components]
+                faces.append(face)
+    # Create TriangleMesh
+    mesh = o3d.geometry.TriangleMesh()
+    mesh.vertices = o3d.utility.Vector3dVector(np.array(vertices))
+    mesh.triangles = o3d.utility.Vector3iVector(np.array(faces))
+    if len(normals) > 0:
+        mesh.vertex_normals = o3d.utility.Vector3dVector(np.array(normals))
+    return mesh
+
+    
+# from https://raw.githubusercontent.com/YZWarren/PointNet-AE-3DMM/master/prepare_data/prepare_data.py
+def list_filenames(folder,ext='.obj'):
+    """Walk through every files in a directory"""
+    filenames = []
+    for dirpath, dirs, files in os.walk(folder):
+        for filename in files:
+            fname,extension = os.path.splitext(filename)
+            if extension == ext:
+                filenames.append(os.path.abspath(os.path.join(dirpath, fname)))
+    return filenames
